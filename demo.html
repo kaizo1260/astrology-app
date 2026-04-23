@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Astrologer API — Demo UI</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222537;
+    --border: #2e3148;
+    --accent: #7c6af7;
+    --accent2: #a78bfa;
+    --text: #e2e4f0;
+    --muted: #7b7f9e;
+    --ok: #34d399;
+    --err: #f87171;
+    --warn: #fbbf24;
+    --radius: 10px;
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header .logo { font-size: 22px; }
+  header h1 { font-size: 17px; font-weight: 600; color: var(--accent2); }
+  header small { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: .5px;
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ── SIDEBAR ── */
+  aside {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 16px 0;
+    overflow-y: auto;
+    position: sticky;
+    top: 57px;
+    height: calc(100vh - 57px);
+  }
+  .sidebar-section {
+    padding: 6px 16px 2px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 18px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    font-size: 13.5px;
+    transition: all .15s;
+    color: var(--muted);
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: var(--surface2);
+    border-left-color: var(--accent);
+    color: var(--text);
+  }
+  .nav-item .icon { width: 18px; text-align: center; font-size: 15px; }
+  .nav-item .tag {
+    margin-left: auto;
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .nav-item.active .tag { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* ── MAIN ── */
+  main {
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── PANEL ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+  }
+  .panel-header h2 { font-size: 14px; font-weight: 600; }
+  .panel-header .desc { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .panel-body { padding: 20px; }
+
+  /* ── FORM ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+  }
+  .form-grid.wide { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.span2 { grid-column: span 2; }
+  .field.span3 { grid-column: span 3; }
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    width: 100%;
+    transition: border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  select option { background: var(--bg); }
+  textarea { resize: vertical; min-height: 80px; font-size: 12px; font-family: monospace; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 18px 0;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── BUTTONS ── */
+  .btn-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .btn {
+    padding: 9px 20px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #6b5cf0; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ── STATUS ── */
+  .status-bar {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+  .dot.ok { background: var(--ok); }
+  .dot.err { background: var(--err); }
+  .dot.loading {
+    background: var(--warn);
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ── RESULT ── */
+  .result-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); }
+  .rtab {
+    padding: 10px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .rtab:hover { color: var(--text); }
+  .rtab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+  .rtab-content { padding: 20px; display: none; }
+  .rtab-content.active { display: block; }
+
+  .chart-container {
+    display: flex;
+    justify-content: center;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 10px;
+    min-height: 200px;
+    align-items: center;
+  }
+  .chart-container svg { max-width: 100%; height: auto; }
+  .chart-split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .json-view {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12px;
+    overflow: auto;
+    max-height: 500px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: #a8d8a8;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 13px; }
+
+  /* ── SCORE CARD ── */
+  .score-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .score-number {
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--accent2);
+    line-height: 1;
+  }
+  .score-label { font-size: 16px; color: var(--text); margin-top: 6px; }
+  .score-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .breakdown-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  .breakdown-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .breakdown-pts {
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .breakdown-desc { font-size: 12.5px; color: var(--text); }
+  .breakdown-detail { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ── MOON PHASE CARD ── */
+  .moon-card {
+    background: var(--bg);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 20px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .moon-emoji { font-size: 64px; line-height: 1; }
+  .moon-info h3 { font-size: 20px; font-weight: 700; }
+  .moon-info .phase-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .moon-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .moon-stat { background: var(--surface2); border-radius: 7px; padding: 10px; }
+  .moon-stat label { font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 700; }
+  .moon-stat .val { font-size: 14px; font-weight: 600; margin-top: 2px; }
+
+  .phase-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    margin: 10px 0;
+    overflow: hidden;
+  }
+  .phase-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 3px;
+    transition: width .5s ease;
+  }
+
+  /* ── OPTIONS PANEL ── */
+  .options-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    margin-left: auto;
+  }
+  .options-toggle:hover { color: var(--text); }
+  .options-panel {
+    border-top: 1px solid var(--border);
+    padding: 16px 20px;
+    background: var(--bg);
+    display: none;
+  }
+  .options-panel.open { display: block; }
+
+  /* ── URL PILL ── */
+  .url-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: monospace;
+    font-size: 11.5px;
+    color: var(--accent2);
+  }
+  .method-badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* ── CHECKBOX TOGGLE ── */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .toggle-row input[type=checkbox] {
+    width: 15px; height: 15px;
+    accent-color: var(--accent);
+  }
+
+  /* ── ASPECTS TABLE ── */
+  .aspects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .aspect-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .aspect-item .orb { color: var(--muted); font-size: 11px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    aside { position: static; height: auto; }
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .chart-split { grid-template-columns: 1fr; }
+  }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-box {
+    background: rgba(248,113,113,.08);
+    border: 1px solid rgba(248,113,113,.3);
+    border-radius: 8px;
+    padding: 14px;
+    color: var(--err);
+    font-size: 13px;
+  }
+
+  .subjects-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .subject-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .subject-card h4 {
+    font-size: 11px;
+    color: var(--accent2);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .info-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* tab views */
+  .page { display: none; }
+  .page.active { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">♈</span>
+  <h1>Astrologer API</h1>
+  <span class="badge">v5</span>
+  <small>Local dev — <code style="color:var(--accent2)">http://localhost:8000</code></small>
+</header>
+
+<div class="layout">
+
+<!-- ── SIDEBAR ── -->
+<aside>
+  <div class="sidebar-section">Chart Endpoints</div>
+  <div class="nav-item active" onclick="showPage('birth')" id="nav-birth">
+    <span class="icon">☀️</span> Birth Chart
+    <span class="tag">1 subject</span>
+  </div>
+  <div class="nav-item" onclick="showPage('now')" id="nav-now">
+    <span class="icon">🕐</span> Now Chart
+    <span class="tag">instant</span>
+  </div>
+  <div class="nav-item" onclick="showPage('synastry')" id="nav-synastry">
+    <span class="icon">💑</span> Synastry
+    <span class="tag">2 subjects</span>
+  </div>
+  <div class="nav-item" onclick="showPage('composite')" id="nav-composite">
+    <span class="icon">🔮</span> Composite
+    <span class="tag">2 subjects</span>
+  </div>
+  <div class="nav-item" onclick="showPage('transit')" id="nav-transit">
+    <span class="icon">🌀</span> Transit
+    <span class="tag">2 subjects</span>
+  </div>
+  <div class="nav-item" onclick="showPage('solar')" id="nav-solar">
+    <span class="icon">🌞</span> Solar Return
+    <span class="tag">yearly</span>
+  </div>
+  <div class="nav-item" onclick="showPage('lunar')" id="nav-lunar">
+    <span class="icon">🌙</span> Lunar Return
+    <span class="tag">monthly</span>
+  </div>
+
+  <div class="sidebar-section">Data / Score</div>
+  <div class="nav-item" onclick="showPage('compatibility')" id="nav-compatibility">
+    <span class="icon">❤️</span> Compatibility Score
+    <span class="tag">score</span>
+  </div>
+  <div class="nav-item" onclick="showPage('subject')" id="nav-subject">
+    <span class="icon">👤</span> Subject Data
+    <span class="tag">data</span>
+  </div>
+
+  <div class="sidebar-section">Moon</div>
+  <div class="nav-item" onclick="showPage('moonphase')" id="nav-moonphase">
+    <span class="icon">🌘</span> Moon Phase
+    <span class="tag">lunar</span>
+  </div>
+  <div class="nav-item" onclick="showPage('moonnow')" id="nav-moonnow">
+    <span class="icon">🌕</span> Moon Phase Now
+    <span class="tag">instant</span>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main>
+
+<!-- ════════════════════════════════ BIRTH CHART ════════════════════════════════ -->
+<div class="page active" id="page-birth">
+  <div class="panel">
+    <div class="panel-header">
+      <span>☀️</span>
+      <h2>Birth Chart (Natal)</h2>
+      <div class="url-pill" style="margin-left:auto">
+        <span class="method-badge">POST</span>/api/v5/chart/birth-chart
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="section-label">Subject</div>
+      <div class="form-grid" id="birth-subject-grid">
+        <!-- filled by JS -->
+      </div>
+      <hr class="divider">
+      <div class="section-label" style="cursor:pointer" onclick="toggleOptions('birth')">
+        ⚙️ Render Options <span id="birth-opts-arrow">▸</span>
+      </div>
+      <div class="options-panel" id="birth-opts">
+        <div class="form-grid">
+          <div class="field">
+            <label>Theme</label>
+            <select id="birth-theme">
+              <option value="classic">Classic</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="dark-high-contrast">Dark High Contrast</option>
+              <option value="strawberry">Strawberry</option>
+              <option value="black-and-white">Black & White</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Language</label>
+            <select id="birth-language">
+              <option value="EN">English</option>
+              <option value="VI">Vietnamese</option>
+              <option value="FR">French</option>
+              <option value="DE">German</option>
+              <option value="IT">Italian</option>
+              <option value="ES">Spanish</option>
+              <option value="PT">Portuguese</option>
+              <option value="RU">Russian</option>
+              <option value="CN">Chinese</option>
+              <option value="TR">Turkish</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Style</label>
+            <select id="birth-style">
+              <option value="classic">Classic</option>
+              <option value="modern">Modern</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Chart Output</label>
+            <select id="birth-split">
+              <option value="false">Single chart</option>
+              <option value="true">Split (wheel + grid)</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:14px">
+          <label class="toggle-row"><input type="checkbox" id="birth-transparent"> Transparent background</label>
+          <label class="toggle-row"><input type="checkbox" id="birth-no-house" > Hide house comparison</label>
+          <label class="toggle-row"><input type="checkbox" id="birth-no-degree"> Hide degree indicators</label>
+          <label class="toggle-row"><input type="checkbox" id="birth-no-icons" > Hide aspect icons</label>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="callBirthChart()">
+          <span>▶</span> Generate Chart
+        </button>
+        <button class="btn btn-ghost" onclick="fillDemo('birth')">Load demo data</button>
+        <div class="status-bar" id="birth-status">
+          <span class="dot"></span> Ready
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="birth-result"></div>
+</div>
+
+<!-- ════════════════════════════════ NOW CHART ════════════════════════════════ -->
+<div class="page" id="page-now">
+  <div class="panel">
+    <div class="panel-header">
+      <span>🕐</span>
+      <h2>Now Chart — Current Moment</h2>
+      <div class="url-pill" style="margin-left:auto">
+        <span class="method-badge">POST</span>/api/v5/now/chart
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+        Tự động lấy thời gian hiện tại UTC tại Greenwich (0° kinh độ). Không cần nhập ngày giờ.
+      </p>
+      <div class="form-grid">
+        <div class="field">
+          <label>Name (optional)</label>
+          <input type="text" id="now-name" value="Now" placeholder="Label name">
+        </div>
+        <div class="field">
+          <label>Theme</label>
+          <select id="now-theme">
+            <option value="classic">Classic</option>
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Style</label>
+          <select id="now-style">
+            <option value="classic">Classic</option>
+            <option value="modern">Modern</option>
+          </select>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="callNowChart()">▶ Get Current Chart</button>
+        <div class="status-bar" id="now-status"><span class="dot"></span> Ready</div>
+      </div>
+    </div>
+  </div>
+  <div id="now-result"></div>
+</div>
+
+<!-- ════════════════════════════════ SYNASTRY ════════════════════════════════ -->
+<div class="page" id="page-synastry">
+  <div class="panel">
+    <div class="panel-header">
+      <span>💑</span>
+      <h2>Synastry Chart — Relationship</h2>
+      <div class="url-pill" style="margin-left:auto">
+        <span class="method-badge">POST</span>/api/v5/chart/synastry
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="subjects-grid">
+        <div class="subject-card">
+          <h4>🔵 First Subject — Inner Wheel</h4>
+          <div class="form-grid" id="syn-s1-grid"></div>
+        </div>
+        <div class="subject-card">
+          <h4>🔴 Second Subject — Outer Wheel</h4>
+          <div class="form-grid" id="syn-s2-grid"></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="form-grid" style="margin-bottom:14px">
+        <div class="field">
+          <label>Theme</label>
+          <select id="syn-theme">
+            <option value="classic">Classic</option><option value="dark">Dark</option><option value="light">Light</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Style</label>
+          <select id="syn-style"><option value="classic">Classic</option><option value="modern">Modern</option></select>
+        </div>
+      </div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:16px">
+        <label class="toggle-row"><input type="checkbox" id="syn-house-cmp" checked> Include house comparison</label>
+        <label class="toggle-row"><input type="checkbox" id="syn-score" checked> Include relationship score</label>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="callSynastry()">▶ Generate Synastry</button>
+        <button class="btn btn-ghost" onclick="fillDemo('synastry')">Load demo data</button>
+        <div class="status-bar" id="syn-status"><span class="dot"></span> Ready</div>
+      </div>
+    </div>
+  </div>
+  <div id="synastry-result"></div>
+</div>
+
+<!-- ════════════════════════════════ COMPOSITE ════════════════════════════════ -->
+<div class="page" id="page-composite">
+  <div class="panel">
+    <div class="panel-header">
+      <span>🔮</span>
+      <h2>Composite Chart — Midpoint</h2>
+      <div class="url-pill" style="margin-left:auto">
+        <span class="method-badge">POST</span>/api/v5/chart/composite
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">
+        Composite chart tính <strong>midpoint</strong> của 2 người → tạo ra "biểu đồ của mối quan hệ" như một thực thể thứ ba. Khác với Synastry (so sánh trực tiếp).
+      </p>
+      <div class="subjects-grid">
+        <div class="subject-card">
+          <h4>🔵 First Subject</h4>
+          <div class="form-grid" id="comp-s1-grid"></div>
+        </div>
+        <div class="subject-card">
+          <h4>🔴 Second Subject</h4>
+          <div class="form-grid" id="comp-s2-grid"></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="form-grid" style="margin-bottom:14px">
+        <div class="field">
+          <label>Theme</label>
+          <select id="comp-theme"><option value="classic">Classic</option><option value="dark">Dark</option></select>
+        </div>
+        <div class="field">
+          <label>Style</label>
+          <select id="comp-style"><option value="classic">Classic</option><option value="modern">Modern</option></select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="callComposite()">▶ Generate Composite</button>
+        <button class="btn btn-ghost" onclick="fillDemo('composite')">Load demo data</button>
+        <div class="status-bar" id="comp-status"><span class="dot"></span> Ready</div>
+      </div>
+    </div>
+  </div>
+  <div id="composite-result"></div>
+</div>
+
+<!-- ════════════════════════════════ TRANSIT ════════════════════════════════ -->
+<div class="page" id="page-transit">
+  <div class="panel">
+    <div class="panel-header">
+      <span>🌀</span>
+      <h2>Transit Chart</h2>
+      <div class="url-pill" style="margin-left:auto">
+        <span class="method-badge">POST</span>/api/v5/chart/transit
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">
+        Inner wheel = Natal (lúc sinh). Outer wheel = Transit (hành tinh tại thời điểm transit, thường là ngày hiện tại hoặc ngày bất kỳ).
+      </p>
+      <div class="subjects-grid">
+        <div class="subject-card">
+          <h4>🔵 Natal Subject — Inner Wheel</h4>
+          <div class="form-grid" id="tr-s1-grid"></div>
+        </div>
+        <div class="subject-card">
+          <h4>🌀 Transit Moment — Outer Wheel</h4>
+          <div class="form-grid" id="tr-s2-grid"></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="form-grid" style="margin-bottom:14px">
+        <div class="field">
+          <label>Theme</label>
+          <select id="tr-theme"><option value="classic">Classic</option><option value="dark">Dark</option></select>
+        </div>
+        <div class="field">
+          <label>Style</label>
+          <select id="tr-style"><option value="classic">Classic</option><option value="modern">Modern</option></select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="callTransit()">▶ Generate Transit</button>
+        <button class="btn btn-ghost" onclick="fillDemo('transit')">Load demo data</button>
+        <div class="status-bar" id="tr-status"><span class="dot"></span> Ready</div>
+      </div>
+    </div>
+  </div>
+  <div id="transit-result"></div>
+</div>
+
+<!-- ════════════════════════════════ SOLAR RETURN ════════════════════════════════ -->
+<div class="page" id="page-solar">
+  <div class="panel">
+    <div class="panel-header">
+      <span>🌞</span>
+      <h2>Solar Return Chart</h2>
+      <div class="url-pill" style="margin-left:auto">
+        <span class="method-badge">POST</span>/api/v5/chart/solar-return
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">
+        Chart khi Mặt Trời trở về vị trí lúc sinh trong năm (~1 lần/năm). Dự đoán xu hướng cho năm tới.
+      </p>
+      <div class="section-label">Natal Subject</div>
+      <div class="form-grid" id="solar-subject-grid"></div>
+      <hr class="divider">
+      <div class="section-label">Return Settings</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Return Year</label>
+          <input type="number" id="solar-year" value="2025" min="1900" max="2100">
+        </div>
+        <div class="field">
+          <label>Wheel Type</label>
+          <select id="solar-wheel">
+            <option value="single">Single (return only)</option>
+            <option value="dual">Dual (natal + return)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Theme</label>
+          <select id="solar-theme"><option value="classic">Classic</option><option value="dark">Dark</option></select>
+        </div>
+        <div class="field">
+          <label>Style</label>
+          <select id="solar-style"><option value="classic">Classic</option><option value="modern">Modern</option></select>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="callSolarReturn()">▶ Generate Solar Return</button>
+        <button class="btn btn-ghost" onclick="fillDemo('solar')">Load demo data</button>
+        <div class="status-bar" id="solar-status"><span class="dot"></span> Ready</div>
+      </div>
+    </div>
+  </div>
+  <div id="solar-result"></div>
+</div>
+
+<!-- ════════════════════════════════ LUNAR RETURN ════════════════════════════════ -->
+<div class="page" id="page-lunar">
+  <div class="panel">
+    <div class="panel-header">
+      <span>🌙</span>
+      <h2>Lunar Return Chart</h2>
+      <div class="url-pill" style="margin-left:auto">
+        <span class="method-badge">POST</span>/api/v5/chart/lunar-return
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">
+        Chart khi Mặt Trăng trở về vị trí lúc sinh (~1 lần/tháng, chu kỳ 29.5 ngày). Dự đoán xu hướng cho tháng tới.
+      </p>
+      <div class="section-label">Natal Subject</div>
+      <div class="form-grid" id="lunar-subject-grid"></div>
+      <hr class="divider">
+      <div class="section-label">Return Settings</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Return Year</label>
+          <input type="number" id="lunar-year" value="2025" min="1900" max="2100">
+        </div>
+        <div class="field">
+          <label>Return Month</label>
+          <input type="number" id="lunar-month" value="4" min="1" max="12">
+        </div>
+        <div class="field">
+          <label>Wheel Type</label>
+          <select id="lunar-wheel">
+            <option value="single">Single</option>
+            <option value="dual">Dual (natal + return)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Theme</label>
+          <select id="lunar-theme"><option value="classic">Classic</option><option value="dark">Dark</option></select>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="callLunarReturn()">▶ Generate Lunar Return</button>
+        <button class="btn btn-ghost" onclick="fillDemo('lunar')">Load demo data</button>
+        <div class="status-bar" id="lunar-status"><span class="dot"></span> Ready</div>
+      </div>
+    </div>
+  </div>
+  <div id="lunar-result"></div>
+</div>
+
+<!-- ════════════════════════════════ COMPATIBILITY ════════════════════════════════ -->
+<div class="page" id="page-compatibility">
+  <div class="panel">
+    <div class="panel-header">
+      <span>❤️</span>
+      <h2>Compatibility Score — Ciro Discepolo</h2>
+      <div class="url-pill" style="margin-left:auto">
+        <span class="method-badge">POST</span>/api/v5/compatibility-score
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">
+        Tính điểm tương thích theo phương pháp Ciro Discepolo. Chỉ trả về điểm số và breakdown, không render SVG.
+      </p>
+      <div class="subjects-grid">
+        <div class="subject-card">
+          <h4>🔵 First Person</h4>
+          <div class="form-grid" id="compat-s1-grid"></div>
+        </div>
+        <div class="subject-card">
+          <h4>🔴 Second Person</h4>
+          <div class="form-grid" id="compat-s2-grid"></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="callCompatibility()">❤️ Calculate Score</button>
+        <button class="btn btn-ghost" onclick="fillDemo('compatibility')">Load demo data</button>
+        <div class="status-bar" id="compat-status"><span class="dot"></span> Ready</div>
+      </div>
+    </div>
+  </div>
+  <div id="compat-result"></div>
+</div>
+
+<!-- ════════════════════════════════ SUBJECT DATA ════════════════════════════════ -->
+<div class="page" id="page-subject">
+  <div class="panel">
+    <div class="panel-header">
+      <span>👤</span>
+      <h2>Subject Data</h2>
+      <div class="url-pill" style="margin-left:auto">
+        <span class="method-badge">POST</span>/api/v5/subject
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">
+        Trả về dữ liệu đầy đủ về một subject (vị trí hành tinh, cung nhà, aspect...) dưới dạng JSON thuần, không có SVG.
+      </p>
+      <div class="form-grid" id="subj-grid"></div>
+      <hr class="divider">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="callSubject()">👤 Get Subject Data</button>
+        <button class="btn btn-ghost" onclick="fillDemo('subject')">Load demo data</button>
+        <div class="status-bar" id="subj-status"><span class="dot"></span> Ready</div>
+      </div>
+    </div>
+  </div>
+  <div id="subject-result"></div>
+</div>
+
+<!-- ════════════════════════════════ MOON PHASE ════════════════════════════════ -->
+<div class="page" id="page-moonphase">
+  <div class="panel">
+    <div class="panel-header">
+      <span>🌘</span>
+      <h2>Moon Phase</h2>
+      <div class="url-pill" style="margin-left:auto">
+        <span class="method-badge">POST</span>/api/v5/moon-phase
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">
+        Lấy chi tiết pha mặt trăng cho một ngày giờ và vị trí cụ thể. <em>Không dùng wrapper subject</em>.
+      </p>
+      <div class="form-grid">
+        <div class="field"><label>Year</label><input type="number" id="moon-year" value="1993"></div>
+        <div class="field"><label>Month</label><input type="number" id="moon-month" value="10" min="1" max="12"></div>
+        <div class="field"><label>Day</label><input type="number" id="moon-day" value="10" min="1" max="31"></div>
+        <div class="field"><label>Hour</label><input type="number" id="moon-hour" value="12" min="0" max="23"></div>
+        <div class="field"><label>Minute</label><input type="number" id="moon-minute" value="12" min="0" max="59"></div>
+        <div class="field"><label>Latitude</label><input type="number" id="moon-lat" value="51.5074" step="0.0001"></div>
+        <div class="field"><label>Longitude</label><input type="number" id="moon-lon" value="-0.1276" step="0.0001"></div>
+        <div class="field"><label>Timezone</label><input type="text" id="moon-tz" value="Europe/London"></div>
+      </div>
+      <hr class="divider">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="callMoonPhase()">🌙 Get Moon Phase</button>
+        <div class="status-bar" id="moon-status"><span class="dot"></span> Ready</div>
+      </div>
+    </div>
+  </div>
+  <div id="moonphase-result"></div>
+</div>
+
+<!-- ════════════════════════════════ MOON NOW ════════════════════════════════ -->
+<div class="page" id="page-moonnow">
+  <div class="panel">
+    <div class="panel-header">
+      <span>🌕</span>
+      <h2>Moon Phase Now (UTC)</h2>
+      <div class="url-pill" style="margin-left:auto">
+        <span class="method-badge">POST</span>/api/v5/moon-phase/now-utc
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+        Pha mặt trăng hiện tại tại Greenwich (UTC). Không cần nhập gì cả.
+      </p>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="callMoonNow()">🌕 Get Current Moon Phase</button>
+        <div class="status-bar" id="moonnow-status"><span class="dot"></span> Ready</div>
+      </div>
+    </div>
+  </div>
+  <div id="moonnow-result"></div>
+</div>
+
+</main>
+</div><!-- /layout -->
+
+<script>
+const BASE = 'http://localhost:8000';
+
+// ── Subject field template ─────────────────────────────────────────────────
+function subjectFields(prefix, defaults = {}) {
+  const d = {
+    name: 'John Doe', city: 'London', year: 1990, month: 6, day: 15,
+    hour: 12, minute: 30, longitude: -0.1278,
+    latitude: 51.5074, timezone: 'Europe/London', nation: 'GB', ...defaults
+  };
+  return `
+    <div class="field"><label>Name</label><input type="text" id="${prefix}-name" value="${d.name}"></div>
+    <div class="field"><label>City</label><input type="text" id="${prefix}-city" value="${d.city}"></div>
+    <div class="field"><label>Nation (ISO)</label><input type="text" id="${prefix}-nation" value="${d.nation}" placeholder="e.g. GB" maxlength="2"></div>
+    <div class="field"><label>Year</label><input type="number" id="${prefix}-year" value="${d.year}" min="1800" max="2200"></div>
+    <div class="field"><label>Month</label><input type="number" id="${prefix}-month" value="${d.month}" min="1" max="12"></div>
+    <div class="field"><label>Day</label><input type="number" id="${prefix}-day" value="${d.day}" min="1" max="31"></div>
+    <div class="field"><label>Hour</label><input type="number" id="${prefix}-hour" value="${d.hour}" min="0" max="23"></div>
+    <div class="field"><label>Minute</label><input type="number" id="${prefix}-minute" value="${d.minute}" min="0" max="59"></div>
+    <div class="field"><label>Latitude</label><input type="number" id="${prefix}-lat" value="${d.latitude}" step="0.0001"></div>
+    <div class="field"><label>Longitude</label><input type="number" id="${prefix}-lon" value="${d.longitude}" step="0.0001"></div>
+    <div class="field span2"><label>Timezone (IANA)</label><input type="text" id="${prefix}-tz" value="${d.timezone}" placeholder="e.g. Europe/London"></div>
+  `;
+}
+
+function getSubject(prefix) {
+  return {
+    name: v(`${prefix}-name`),
+    city: v(`${prefix}-city`),
+    nation: v(`${prefix}-nation`) || null,
+    year: int(`${prefix}-year`),
+    month: int(`${prefix}-month`),
+    day: int(`${prefix}-day`),
+    hour: int(`${prefix}-hour`),
+    minute: int(`${prefix}-minute`),
+    latitude: float(`${prefix}-lat`),
+    longitude: float(`${prefix}-lon`),
+    timezone: v(`${prefix}-tz`),
+  };
+}
+
+// ── Init subject grids ─────────────────────────────────────────────────────
+const grids = {
+  'birth-subject-grid': 'birth',
+  'syn-s1-grid': 'syn-s1', 'syn-s2-grid': 'syn-s2',
+  'comp-s1-grid': 'comp-s1', 'comp-s2-grid': 'comp-s2',
+  'tr-s1-grid': 'tr-s1', 'tr-s2-grid': 'tr-s2',
+  'solar-subject-grid': 'solar-subj',
+  'lunar-subject-grid': 'lunar-subj',
+  'compat-s1-grid': 'compat-s1', 'compat-s2-grid': 'compat-s2',
+  'subj-grid': 'subj',
+};
+Object.entries(grids).forEach(([gridId, prefix]) => {
+  const el = document.getElementById(gridId);
+  if (el) el.innerHTML = subjectFields(prefix);
+});
+
+// ── Demo data ──────────────────────────────────────────────────────────────
+const DEMO = {
+  john: { name:'John Lennon', city:'Liverpool', nation:'GB', year:1940, month:10, day:9, hour:18, minute:30, latitude:53.4084, longitude:-2.9916, timezone:'Europe/London' },
+  paul: { name:'Paul McCartney', city:'Liverpool', nation:'GB', year:1942, month:6, day:18, hour:14, minute:0, latitude:53.4084, longitude:-2.9916, timezone:'Europe/London' },
+  transit: { name:'Transit', city:'Liverpool', nation:'GB', year:2025, month:4, day:23, hour:12, minute:0, latitude:53.4084, longitude:-2.9916, timezone:'Europe/London' },
+};
+
+function fillSubject(prefix, data) {
+  const mapping = {
+    name: `${prefix}-name`,
+    city: `${prefix}-city`,
+    nation: `${prefix}-nation`,
+    year: `${prefix}-year`,
+    month: `${prefix}-month`,
+    day: `${prefix}-day`,
+    hour: `${prefix}-hour`,
+    minute: `${prefix}-minute`,
+    latitude: `${prefix}-lat`,
+    longitude: `${prefix}-lon`,
+    timezone: `${prefix}-tz`
+  };
+  Object.keys(data).forEach(k => {
+    const el = document.getElementById(mapping[k]);
+    if (el) el.value = data[k];
+  });
+}
+
+function fillDemo(page) {
+  switch(page) {
+    case 'birth': fillSubject('birth', DEMO.john); break;
+    case 'synastry': fillSubject('syn-s1', DEMO.john); fillSubject('syn-s2', DEMO.paul); break;
+    case 'composite': fillSubject('comp-s1', DEMO.john); fillSubject('comp-s2', DEMO.paul); break;
+    case 'transit': fillSubject('tr-s1', DEMO.john); fillSubject('tr-s2', DEMO.transit); break;
+    case 'solar': fillSubject('solar-subj', DEMO.john); break;
+    case 'lunar': fillSubject('lunar-subj', DEMO.john); break;
+    case 'compatibility': fillSubject('compat-s1', DEMO.john); fillSubject('compat-s2', DEMO.paul); break;
+    case 'subject': fillSubject('subj', DEMO.john); break;
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const v = id => document.getElementById(id)?.value?.trim() || '';
+const int = id => parseInt(v(id)) || 0;
+const float = id => parseFloat(v(id)) || 0;
+
+function setStatus(id, state, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const dot = el.querySelector('.dot');
+  dot.className = 'dot ' + state;
+  el.lastChild.textContent = ' ' + msg;
+}
+
+async function callAPI(url, body, statusId) {
+  setStatus(statusId, 'loading', 'Loading…');
+  try {
+    const res = await fetch(BASE + url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus(statusId, 'err', `Error ${res.status}`);
+      return { error: data };
+    }
+    setStatus(statusId, 'ok', `OK — ${new Date().toLocaleTimeString()}`);
+    return data;
+  } catch(e) {
+    setStatus(statusId, 'err', 'Network error: ' + e.message);
+    return { error: e.message };
+  }
+}
+
+// ── Result renderer ────────────────────────────────────────────────────────
+function renderChartResult(containerId, data) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  if (data.error) {
+    el.innerHTML = `<div class="panel" style="margin-top:16px"><div class="panel-body"><div class="error-box"><strong>Error:</strong><br><pre style="white-space:pre-wrap;margin-top:6px;font-size:11px">${JSON.stringify(data.error, null, 2)}</pre></div></div></div>`;
+    return;
+  }
+
+  const hasSplit = data.chart_wheel && data.chart_grid;
+  const hasSingle = data.chart;
+  const hasChartData = data.chart_data;
+
+  el.innerHTML = `
+    <div class="panel" style="margin-top:16px">
+      <div class="result-tabs">
+        ${(hasSingle || hasSplit) ? `<button class="rtab active" onclick="switchTab(this, 'tab-chart-${containerId}')">📊 SVG Chart</button>` : ''}
+        ${hasChartData ? `<button class="rtab ${(!hasSingle && !hasSplit) ? 'active' : ''}" onclick="switchTab(this, 'tab-data-${containerId}')">📋 Chart Data</button>` : ''}
+        <button class="rtab" onclick="switchTab(this, 'tab-raw-${containerId}')">{ } Raw JSON</button>
+      </div>
+
+      ${(hasSingle || hasSplit) ? `
+      <div class="rtab-content active" id="tab-chart-${containerId}">
+        ${hasSplit ? `
+          <div style="padding:16px"><p style="font-size:12px;color:var(--muted);margin-bottom:12px">Split chart: wheel + grid separadas</p>
+          <div class="chart-split">
+            <div><p style="font-size:11px;color:var(--muted);margin-bottom:6px">Zodiac Wheel</p><div class="chart-container">${data.chart_wheel}</div></div>
+            <div><p style="font-size:11px;color:var(--muted);margin-bottom:6px">Aspect Grid</p><div class="chart-container">${data.chart_grid}</div></div>
+          </div></div>
+        ` : `<div class="chart-container" style="padding:20px">${data.chart}</div>`}
+      </div>` : ''}
+
+      ${hasChartData ? `
+      <div class="rtab-content ${(!hasSingle && !hasSplit) ? 'active' : ''}" id="tab-data-${containerId}">
+        <div style="padding:20px">${renderChartDataSummary(data.chart_data)}</div>
+      </div>` : ''}
+
+      <div class="rtab-content" id="tab-raw-${containerId}">
+        <div class="json-view">${syntaxHighlight(JSON.stringify(omitSVG(data), null, 2))}</div>
+      </div>
+    </div>
+  `;
+}
+
+function omitSVG(obj) {
+  if (typeof obj !== 'object' || obj === null) return obj;
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (typeof v === 'string' && v.startsWith('<svg')) {
+      out[k] = `[SVG string — ${v.length} chars]`;
+    } else if (typeof v === 'object') {
+      out[k] = omitSVG(v);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+function renderChartDataSummary(cd) {
+  if (!cd) return '';
+  const planets = cd.planets || cd.first_subject_planets || {};
+  const aspects = cd.aspects || [];
+
+  const planetRows = Object.entries(planets).map(([name, p]) =>
+    `<tr>
+      <td style="padding:5px 10px;font-weight:600">${name}</td>
+      <td style="padding:5px 10px;color:var(--accent2)">${p.sign || '—'}</td>
+      <td style="padding:5px 10px;color:var(--muted)">${p.abs_pos?.toFixed(2) || '—'}°</td>
+      <td style="padding:5px 10px">${p.house ? 'House ' + p.house : '—'}</td>
+      <td style="padding:5px 10px;color:${p.retrograde ? 'var(--warn)' : 'var(--ok)'}">${p.retrograde ? '℞ Retrograde' : 'Direct'}</td>
+    </tr>`
+  ).join('');
+
+  const aspectRows = aspects.slice(0, 20).map(a =>
+    `<tr>
+      <td style="padding:5px 10px;font-weight:600">${a.p1_name}</td>
+      <td style="padding:5px 10px;color:var(--accent2)">${a.aspect}</td>
+      <td style="padding:5px 10px;font-weight:600">${a.p2_name}</td>
+      <td style="padding:5px 10px;color:var(--muted)">${(a.orbit ?? a.orb)?.toFixed(2) || '—'}°</td>
+    </tr>`
+  ).join('');
+
+  return `
+    <div class="section-label">Planet Positions</div>
+    <div style="overflow-x:auto;margin-bottom:20px">
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+        <thead><tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:6px 10px;text-align:left;color:var(--muted)">Planet</th>
+          <th style="padding:6px 10px;text-align:left;color:var(--muted)">Sign</th>
+          <th style="padding:6px 10px;text-align:left;color:var(--muted)">Abs Pos</th>
+          <th style="padding:6px 10px;text-align:left;color:var(--muted)">House</th>
+          <th style="padding:6px 10px;text-align:left;color:var(--muted)">Motion</th>
+        </tr></thead>
+        <tbody>${planetRows || '<tr><td colspan="5" style="padding:12px;color:var(--muted);text-align:center">No planet data</td></tr>'}</tbody>
+      </table>
+    </div>
+    ${aspects.length ? `
+    <div class="section-label">Aspects (${aspects.length} total${aspects.length > 20 ? ', showing 20' : ''})</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+        <thead><tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:6px 10px;text-align:left;color:var(--muted)">Planet 1</th>
+          <th style="padding:6px 10px;text-align:left;color:var(--muted)">Aspect</th>
+          <th style="padding:6px 10px;text-align:left;color:var(--muted)">Planet 2</th>
+          <th style="padding:6px 10px;text-align:left;color:var(--muted)">Orb</th>
+        </tr></thead>
+        <tbody>${aspectRows}</tbody>
+      </table>
+    </div>` : ''}
+  `;
+}
+
+function renderMoonResult(containerId, data) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  if (data.error) {
+    el.innerHTML = `<div class="panel" style="margin-top:16px"><div class="panel-body"><div class="error-box"><strong>Error:</strong><pre style="white-space:pre-wrap;margin-top:6px;font-size:11px">${JSON.stringify(data.error, null, 2)}</pre></div></div></div>`;
+    return;
+  }
+
+  const m = data.moon_phase_overview;
+  if (!m) {
+    el.innerHTML = `<div class="panel" style="margin-top:16px"><div class="panel-body"><div class="error-box">Unexpected response format</div></div></div>`;
+    return;
+  }
+
+  const moon = m.moon || {};
+  const sun = m.sun || {};
+  const loc = m.location || {};
+  const illumination = parseFloat(moon.illumination) || 0;
+  const upcoming = moon.detailed?.upcoming_phases || {};
+
+  el.innerHTML = `
+    <div class="panel" style="margin-top:16px">
+      <div class="result-tabs">
+        <button class="rtab active" onclick="switchTab(this, 'tab-moon-${containerId}')">🌙 Overview</button>
+        <button class="rtab" onclick="switchTab(this, 'tab-moon-raw-${containerId}')">{ } Raw JSON</button>
+      </div>
+      <div class="rtab-content active" id="tab-moon-${containerId}">
+        <div style="padding:20px">
+          <div class="moon-card">
+            <div class="moon-emoji">${moon.emoji || '🌙'}</div>
+            <div class="moon-info">
+              <h3>${moon.phase_name || 'Unknown'}</h3>
+              <div class="phase-sub">${moon.stage || ''} · ${moon.major_phase || ''}</div>
+              <div class="phase-bar" style="margin-top:12px">
+                <div class="phase-bar-fill" style="width:${illumination}%"></div>
+              </div>
+              <div style="font-size:11px;color:var(--muted)">Illumination: <strong style="color:var(--text)">${moon.illumination || '—'}</strong></div>
+            </div>
+          </div>
+
+          <div class="moon-stats" style="margin-top:16px">
+            <div class="moon-stat"><label>Date</label><div class="val" style="font-size:12px">${m.datestamp || '—'}</div></div>
+            <div class="moon-stat"><label>Lunar Cycle</label><div class="val">${moon.lunar_cycle || '—'}</div></div>
+            <div class="moon-stat"><label>Moon Age</label><div class="val">${moon.age_days != null ? moon.age_days + ' days' : '—'}</div></div>
+            <div class="moon-stat"><label>Phase %</label><div class="val">${moon.phase != null ? (moon.phase * 100).toFixed(1) + '%' : '—'}</div></div>
+            <div class="moon-stat"><label>Sunrise</label><div class="val">${sun.sunrise_timestamp || '—'}</div></div>
+            <div class="moon-stat"><label>Sunset</label><div class="val">${sun.sunset_timestamp || '—'}</div></div>
+            <div class="moon-stat"><label>Sun Sign</label><div class="val">${moon.zodiac?.sun_sign || '—'}</div></div>
+            <div class="moon-stat"><label>Moon Sign</label><div class="val">${moon.zodiac?.moon_sign || '—'}</div></div>
+          </div>
+
+          ${Object.keys(upcoming).length ? `
+          <div class="section-label" style="margin-top:20px">Upcoming Phases</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+            ${Object.entries(upcoming).map(([phase, info]) => `
+              <div class="moon-stat">
+                <label>${phase.replace(/_/g,' ')}</label>
+                <div class="val" style="font-size:12px">${info.next?.datestamp?.slice(0,16) || '—'}</div>
+                <div style="font-size:11px;color:var(--muted)">${info.next?.days_ahead != null ? info.next.days_ahead + ' days ahead' : ''}</div>
+              </div>
+            `).join('')}
+          </div>` : ''}
+        </div>
+      </div>
+      <div class="rtab-content" id="tab-moon-raw-${containerId}">
+        <div class="json-view">${syntaxHighlight(JSON.stringify(data, null, 2))}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderCompatResult(containerId, data) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  if (data.error) {
+    el.innerHTML = `<div class="panel" style="margin-top:16px"><div class="panel-body"><div class="error-box"><strong>Error:</strong><pre>${JSON.stringify(data.error, null, 2)}</pre></div></div></div>`;
+    return;
+  }
+
+  const score = data.score ?? 0;
+  const desc = data.score_description || '';
+  const breakdown = data.score_breakdown || [];
+  const isDestiny = data.is_destiny_sign;
+
+  const scoreColor = score >= 20 ? 'var(--ok)' : score >= 10 ? 'var(--accent2)' : score >= 5 ? 'var(--warn)' : 'var(--muted)';
+
+  el.innerHTML = `
+    <div class="panel" style="margin-top:16px">
+      <div class="result-tabs">
+        <button class="rtab active" onclick="switchTab(this, 'tab-compat-${containerId}')">❤️ Score</button>
+        <button class="rtab" onclick="switchTab(this, 'tab-compat-raw-${containerId}')">{ } Raw JSON</button>
+      </div>
+      <div class="rtab-content active" id="tab-compat-${containerId}">
+        <div style="padding:20px">
+          <div class="score-card">
+            <div class="score-number" style="color:${scoreColor}">${score}</div>
+            <div class="score-label">${desc}</div>
+            ${isDestiny ? `<div style="margin-top:10px"><span class="badge" style="background:var(--warn);font-size:12px;padding:4px 12px">⭐ Destiny Sign</span></div>` : ''}
+            <div class="score-sub" style="margin-top:10px">
+              Score 0–4: Minor · 5–9: Notable · 10–14: Important · 15+: Exceptional
+            </div>
+          </div>
+          ${breakdown.length ? `
+          <div class="section-label">Score Breakdown</div>
+          <div class="breakdown-list">
+            ${breakdown.map(b => `
+              <div class="breakdown-item">
+                <span class="breakdown-pts">+${b.points ?? b.score ?? 0}</span>
+                <div>
+                  <div class="breakdown-desc">${b.description || b.rule || ''}</div>
+                  ${b.details ? `<div class="breakdown-detail">${b.details}</div>` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>` : '<p style="color:var(--muted);font-size:13px;margin-top:12px">No breakdown available</p>'}
+        </div>
+      </div>
+      <div class="rtab-content" id="tab-compat-raw-${containerId}">
+        <div class="json-view">${syntaxHighlight(JSON.stringify(omitSVG(data), null, 2))}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSubjectResult(containerId, data) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (data.error) {
+    el.innerHTML = `<div class="panel" style="margin-top:16px"><div class="panel-body"><div class="error-box">${JSON.stringify(data.error, null, 2)}</div></div></div>`;
+    return;
+  }
+  const chartData = { planets: data.subject?.planets || {}, aspects: [] };
+  el.innerHTML = `
+    <div class="panel" style="margin-top:16px">
+      <div class="result-tabs">
+        <button class="rtab active" onclick="switchTab(this, 'tab-subj-${containerId}')">👤 Subject</button>
+        <button class="rtab" onclick="switchTab(this, 'tab-subj-raw-${containerId}')">{ } Raw JSON</button>
+      </div>
+      <div class="rtab-content active" id="tab-subj-${containerId}">
+        <div style="padding:20px">${renderChartDataSummary(chartData)}</div>
+      </div>
+      <div class="rtab-content" id="tab-subj-raw-${containerId}">
+        <div class="json-view">${syntaxHighlight(JSON.stringify(data, null, 2))}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ── Syntax highlight JSON ─────────────────────────────────────────────────
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      let cls = 'color:#f9c74f'; // number
+      if (/^"/.test(m)) { cls = /:$/.test(m) ? 'color:#90e0ef' : 'color:#a8d8a8'; }
+      else if (/true|false/.test(m)) cls = 'color:#f77f00';
+      else if (/null/.test(m)) cls = 'color:#7b7f9e';
+      return `<span style="${cls}">${m}</span>`;
+    });
+}
+
+// ── Tab switch ────────────────────────────────────────────────────────────
+function switchTab(btn, tabId) {
+  const panel = btn.closest('.panel');
+  panel.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
+  panel.querySelectorAll('.rtab-content').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const tab = document.getElementById(tabId);
+  if (tab) tab.classList.add('active');
+}
+
+// ── Page nav ──────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+  const nav = document.getElementById('nav-' + name);
+  if (nav) nav.classList.add('active');
+}
+
+// ── Options toggle ────────────────────────────────────────────────────────
+function toggleOptions(id) {
+  const panel = document.getElementById(id + '-opts');
+  const arrow = document.getElementById(id + '-opts-arrow');
+  if (!panel) return;
+  panel.classList.toggle('open');
+  if (arrow) arrow.textContent = panel.classList.contains('open') ? '▾' : '▸';
+}
+
+// ════════════════════ API CALLS ════════════════════
+
+async function callBirthChart() {
+  const body = {
+    subject: getSubject('birth'),
+    theme: v('birth-theme'),
+    language: v('birth-language'),
+    style: v('birth-style'),
+    split_chart: v('birth-split') === 'true',
+    transparent_background: document.getElementById('birth-transparent').checked,
+    show_house_position_comparison: !document.getElementById('birth-no-house').checked,
+    show_degree_indicators: !document.getElementById('birth-no-degree').checked,
+    show_aspect_icons: !document.getElementById('birth-no-icons').checked,
+  };
+  const data = await callAPI('/api/v5/chart/birth-chart', body, 'birth-status');
+  renderChartResult('birth-result', data);
+}
+
+async function callNowChart() {
+  const body = { theme: v('now-theme'), style: v('now-style') };
+  const data = await callAPI('/api/v5/now/chart', body, 'now-status');
+  renderChartResult('now-result', data);
+}
+
+async function callSynastry() {
+  const body = {
+    first_subject: getSubject('syn-s1'),
+    second_subject: getSubject('syn-s2'),
+    theme: v('syn-theme'),
+    style: v('syn-style'),
+    include_house_comparison: document.getElementById('syn-house-cmp').checked,
+    include_relationship_score: document.getElementById('syn-score').checked,
+  };
+  const data = await callAPI('/api/v5/chart/synastry', body, 'syn-status');
+  renderChartResult('synastry-result', data);
+}
+
+async function callComposite() {
+  const body = {
+    first_subject: getSubject('comp-s1'),
+    second_subject: getSubject('comp-s2'),
+    theme: v('comp-theme'),
+    style: v('comp-style'),
+  };
+  const data = await callAPI('/api/v5/chart/composite', body, 'comp-status');
+  renderChartResult('composite-result', data);
+}
+
+async function callTransit() {
+  const body = {
+    first_subject: getSubject('tr-s1'),
+    transit_subject: getSubject('tr-s2'),
+    theme: v('tr-theme'),
+    style: v('tr-style'),
+  };
+  const data = await callAPI('/api/v5/chart/transit', body, 'tr-status');
+  renderChartResult('transit-result', data);
+}
+
+async function callSolarReturn() {
+  const body = {
+    subject: getSubject('solar-subj'),
+    year: int('solar-year'),
+    wheel_type: v('solar-wheel'),
+    theme: v('solar-theme'),
+    style: v('solar-style'),
+  };
+  const data = await callAPI('/api/v5/chart/solar-return', body, 'solar-status');
+  renderChartResult('solar-result', data);
+}
+
+async function callLunarReturn() {
+  const body = {
+    subject: getSubject('lunar-subj'),
+    year: int('lunar-year'),
+    month: int('lunar-month'),
+    wheel_type: v('lunar-wheel'),
+    theme: v('lunar-theme'),
+  };
+  const data = await callAPI('/api/v5/chart/lunar-return', body, 'lunar-status');
+  renderChartResult('lunar-result', data);
+}
+
+async function callCompatibility() {
+  const body = {
+    first_subject: getSubject('compat-s1'),
+    second_subject: getSubject('compat-s2'),
+  };
+  const data = await callAPI('/api/v5/compatibility-score', body, 'compat-status');
+  renderCompatResult('compat-result', data);
+}
+
+async function callSubject() {
+  const body = { subject: getSubject('subj') };
+  const data = await callAPI('/api/v5/subject', body, 'subj-status');
+  renderSubjectResult('subject-result', data);
+}
+
+async function callMoonPhase() {
+  const body = {
+    year: int('moon-year'), month: int('moon-month'), day: int('moon-day'),
+    hour: int('moon-hour'), minute: int('moon-minute'),
+    latitude: float('moon-lat'), longitude: float('moon-lon'),
+    timezone: v('moon-tz'),
+  };
+  const data = await callAPI('/api/v5/moon-phase', body, 'moon-status');
+  renderMoonResult('moonphase-result', data);
+}
+
+async function callMoonNow() {
+  const data = await callAPI('/api/v5/moon-phase/now-utc', {}, 'moonnow-status');
+  renderMoonResult('moonnow-result', data);
+}
+</script>
+</body>
+</html>

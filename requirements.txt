@@ -1,0 +1,11 @@
+pydantic
+pydantic-settings
+starlette
+fastapi
+uvicorn
+types-pytz
+pytz
+scour
+typing-extensions
+pyjwt>=2.10.1
+kerykeion==5.12.8
