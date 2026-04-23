@@ -1,20 +1,18 @@
 {
-  "buildCommand": "cd Astrologer && pip install -e . && cd ..",
-  "outputDirectory": ".",
-  "installCommand": "pip install -r requirements.txt",
-  "env": {
-    "ENV_TYPE": "production",
-    "LOG_LEVEL": "INFO"
-  },
-  "functions": {
-    "api/**": {
-      "runtime": "python3.11"
-    }
-  },
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "api"
+      "src": "demo.html",
+      "use": "@vercel/static"
     }
-  ]
+  ],
+  "routes": [
+    {
+      "src": "/(?!api)",
+      "dest": "/demo.html"
+    }
+  ],
+  "env": {
+    "VERCEL_ENV": "production"
+  }
 }

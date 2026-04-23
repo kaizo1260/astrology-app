@@ -103,17 +103,58 @@ RAPID_API_KEY=your_key
 
 ## Deployment
 
-### Vercel Deployment
+### Frontend: Vercel (demo.html)
 
-The app is configured for easy deployment on Vercel:
+Deploy the frontend to Vercel:
 
 1. Push to GitHub (main branch)
-2. Connect repository to Vercel
-3. Auto-deploy on every push
+2. Connect repository to Vercel at https://vercel.com/new
+3. Select this repository
+4. Vercel will auto-deploy on every push
 
-The `vercel.json` handles:
-- Frontend (demo.html) serving
-- Backend API routing to FastAPI
+**Live Demo:** https://astrology-app-tau.vercel.app
+
+### Backend: Astrologer API
+
+The API needs to be deployed separately. You have several options:
+
+#### Option A: Railway (Recommended)
+1. Go to https://railway.app
+2. Create new project → GitHub
+3. Select the `Astrologer` folder
+4. Railway will auto-detect it as Python
+5. Set `ENV_TYPE=production` in variables
+6. Get your API URL (e.g., `https://astrology-api.railway.app`)
+
+#### Option B: Render.com
+1. Go to https://render.com
+2. New → Web Service
+3. Connect GitHub
+4. Set build & start commands:
+   - Build: `cd Astrologer && pip install -e .`
+   - Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+
+#### Option C: Heroku
+```bash
+cd Astrologer
+heroku create astrology-api
+git push heroku main
+```
+
+### Connecting Frontend to Backend
+
+After deploying the API, use it in the frontend:
+
+```
+https://astrology-app-tau.vercel.app?api=https://your-api-url.com
+```
+
+For example:
+```
+https://astrology-app-tau.vercel.app?api=https://astrology-api.railway.app
+```
+
+The `?api=` query parameter overrides the API endpoint.
 
 ## Technologies Used
 

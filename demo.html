@@ -1072,7 +1072,22 @@
 </div><!-- /layout -->
 
 <script>
-const BASE = 'http://localhost:8000';
+// API endpoint - use URL parameter or detect environment
+const getApiUrl = () => {
+  const params = new URLSearchParams(window.location.search);
+  const apiParam = params.get('api');
+  if (apiParam) return apiParam;
+
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+
+  // For production, you can set it here or use query param
+  return 'http://localhost:8000';
+};
+
+const BASE = getApiUrl();
 
 // ── Subject field template ─────────────────────────────────────────────────
 function subjectFields(prefix, defaults = {}) {
